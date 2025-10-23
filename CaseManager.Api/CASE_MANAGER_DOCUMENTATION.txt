@@ -1,0 +1,680 @@
+================================================================================
+                    CASE MANAGER APPLICATION DOCUMENTATION
+================================================================================
+
+OVERVIEW
+--------
+Case Manager is a full-stack web application designed to help organizations 
+manage cases, users, and task actions efficiently. The application provides 
+secure authentication, role-based access control, and AI-powered assistance 
+for task completion and user support.
+
+The system consists of:
+- Backend: ASP.NET Core 8.0 Web API with SQLite database
+- Frontend: Angular 20 with Material UI
+- Authentication: JWT-based token authentication
+- AI Features: Digital Worker AI assistant for task completion and Q&A
+
+
+================================================================================
+                              SYSTEM ARCHITECTURE
+================================================================================
+
+BACKEND STACK
+-------------
+- Framework: ASP.NET Core 8.0 Web API
+- Database: SQLite with Entity Framework Core 9.0
+- Authentication: JWT Bearer Token (8-hour expiration)
+- Architecture Pattern: Repository Pattern with Service Layer
+- API Documentation: Swagger/OpenAPI
+- Port: http://localhost:5226
+
+FRONTEND STACK
+--------------
+- Framework: Angular 20 (Standalone Components)
+- UI Library: Angular Material Design
+- Theme: Light theme with WCAG AA/AAA compliance (508c compliant)
+- State Management: RxJS Observables
+- HTTP Communication: Angular HttpClient with interceptors
+- Port: http://localhost:4200
+
+DATABASE SCHEMA
+---------------
+Tables:
+1. Users - Stores user information
+2. Cases - Stores case records
+3. TaskActions - Stores task assignments and actions
+
+
+================================================================================
+                                  FEATURES
+================================================================================
+
+CORE FEATURES
+-------------
+
+1. USER MANAGEMENT
+   - Create, Read, Update, Delete (CRUD) operations for users
+   - User profile management with address information
+   - Username-based authentication
+   - User context tracking via JWT claims
+
+2. CASE MANAGEMENT
+   - Create, Read, Update, Delete (CRUD) operations for cases
+   - Case assignment to users
+   - Track case completion status
+   - View cases assigned to authenticated user only
+   - Link cases to regarding users and assigned users
+   - Case details display with user full names (inner join with Users table)
+
+3. TASK ACTION MANAGEMENT
+   - Create and view task actions
+   - Assign tasks to specific users
+   - Track task completion status
+   - View-only access (no edit/delete from UI)
+   - Task prioritization and scheduling
+
+4. AUTHENTICATION & AUTHORIZATION
+   - JWT token-based authentication
+   - Username-only login (no password required in current implementation)
+   - 8-hour token validity
+   - Token includes claims: userId, userName, firstName, lastName, correlationId
+   - Protected API endpoints with [Authorize] attribute
+   - Route guards protecting frontend pages
+   - Automatic token injection via HTTP interceptor
+   - Token storage in browser localStorage
+
+5. SECURITY FEATURES
+   - All API endpoints protected except login
+   - User context available in all controllers via BaseController
+   - Correlation ID for request tracking and logging
+   - CORS configuration for frontend-backend communication
+
+6. AI-POWERED FEATURES
+   - Digital Worker AI Assistant
+   - AI chat agent for answering application questions
+   - AI-assisted task completion for assigned tasks
+   - Natural language query support
+   - Context-aware assistance
+
+
+================================================================================
+                                  MODULES
+================================================================================
+
+BACKEND MODULES
+---------------
+
+1. MODELS (CaseManager.Api/Models/)
+   - User: User entity with UserId, UserName, FirstName, LastName, Address
+   - Case: Case entity with CaseId, CaseName, RegardingUserId, AssignedUserId, 
+           IsComplete, CanComplete
+   - TaskAction: Task entity with TaskActionId, TaskActionName, AssignedUserId, 
+                 DueDate, IsComplete, CanComplete
+   - CaseDetailDto: Data transfer object with case info + user names (inner join)
+   - UserContext: User information extracted from JWT claims
+   - LoginRequest: Login payload (username only)
+   - LoginResponse: Login response with token and user info
+
+2. SERVICES (CaseManager.Api/Services/)
+   - IUserService / UserService: Business logic for user operations
+   - ICaseService / CaseService: Business logic for case operations, includes 
+                                 GetCaseDetailByIdAsync with inner joins
+   - ITaskActionService / TaskActionService: Business logic for task operations
+   - ITokenService / TokenService: JWT token generation and management
+
+3. REPOSITORIES (CaseManager.Api/Repositories/)
+   - IRepository<T> / Repository<T>: Generic repository for data access
+   - Implements: GetAllAsync, GetByIdAsync, AddAsync, UpdateAsync, DeleteAsync
+
+4. CONTROLLERS (CaseManager.Api/Controllers/)
+   - BaseController: Abstract base with [Authorize] attribute and CurrentUser property
+   - AuthorizationController: Login/logout endpoints ([AllowAnonymous])
+   - UsersController: User CRUD endpoints
+   - CasesController: Case CRUD endpoints, filtered by assigned user
+   - TaskActionsController: Task CRUD endpoints
+
+5. DATA LAYER (CaseManager.Api/Data/)
+   - CaseManagerDbContext: Entity Framework DbContext
+   - Database Seeding: Pre-populated with sample users and cases
+
+FRONTEND MODULES
+----------------
+
+1. AUTHENTICATION MODULE
+   - LoginComponent: Username-based login form
+   - AuthService: Token management and authentication state
+   - AuthGuard: Route protection
+   - AuthInterceptor: Automatic Bearer token injection
+
+2. USERS MODULE
+   - UserListComponent: Display all users in data grid
+   - UserDetailComponent: View single user details
+   - UserFormComponent: Create/edit user form with Material Design
+
+3. CASES MODULE
+   - CaseListComponent: Display cases assigned to current user
+   - CaseDetailComponent: View case with user full names (from inner join)
+   - CaseFormComponent: Create/edit case with user dropdown selectors
+
+4. TASK ACTIONS MODULE
+   - TaskActionListComponent: Display tasks (view-only)
+   - TaskActionDetailComponent: View task details
+   - TaskActionFormComponent: Create task form
+
+5. SHARED SERVICES
+   - UserService: HTTP service for user operations
+   - CaseService: HTTP service for case operations
+   - TaskActionService: HTTP service for task operations
+
+
+================================================================================
+                              DIGITAL WORKER AI
+================================================================================
+
+DIGITAL WORKER - AI CHAT AGENT
+-------------------------------
+The Digital Worker is an intelligent AI assistant integrated into the Case 
+Manager application to help users with:
+
+1. APPLICATION GUIDANCE
+   - Answer questions about application features
+   - Explain how to use different modules
+   - Provide navigation assistance
+   - Clarify business processes
+
+2. TASK ASSISTANCE
+   - Help users understand assigned tasks
+   - Provide AI-powered suggestions for task completion
+   - Automate repetitive task actions
+   - Offer contextual recommendations based on case history
+
+3. QUERY SUPPORT
+   - Natural language queries about cases and users
+   - Quick data lookups and summaries
+   - Report generation assistance
+   - Troubleshooting common issues
+
+AI FEATURES
+-----------
+- Context-aware responses based on user's current role
+- Access to application documentation and knowledge base
+- Integration with case and task data for informed responses
+- Continuous learning from user interactions
+
+
+================================================================================
+                              HOW TO USE
+================================================================================
+
+HOW TO CREATE A USER
+--------------------
+1. Navigate to the Users section from the main menu
+2. Click the "Add User" button (+ icon)
+3. Fill in the user form:
+   - User Name: Unique username for authentication
+   - First Name: User's first name
+   - Last Name: User's last name
+   - Address: User's physical address (optional)
+4. Click "Save" to create the user
+5. The new user will appear in the users list
+6. User can now login using their username
+
+ALTERNATIVE: API Endpoint
+POST /api/Users
+Body: {
+  "userName": "string",
+  "firstName": "string",
+  "lastName": "string",
+  "address": "string"
+}
+
+HOW TO CREATE A CASE
+---------------------
+1. Login to the application with your username
+2. Navigate to the Cases section from the main menu
+3. Click the "Add Case" button (+ icon)
+4. Fill in the case form:
+   - Case Name: Descriptive title for the case
+   - Regarding User: Select user from dropdown (case is about this user)
+   - Assigned User: Select user from dropdown (who will work on the case)
+   - Can Complete: Toggle whether the case can be marked complete
+   - Note: IsComplete defaults to false (not shown in UI)
+5. Click "Save" to create the case
+6. The case will appear in the case list for the assigned user
+7. Only users assigned to the case can view it in their case list
+
+ALTERNATIVE: API Endpoint
+POST /api/Cases
+Headers: Authorization: Bearer <token>
+Body: {
+  "caseName": "string",
+  "regardingUserId": number,
+  "assignedUserId": number,
+  "canComplete": boolean,
+  "isComplete": false
+}
+
+HOW TO CREATE A TASK ACTION
+----------------------------
+1. Login to the application
+2. Navigate to the Task Actions section
+3. Click the "Add Task Action" button (+ icon)
+4. Fill in the task form:
+   - Task Action Name: Description of the task
+   - Assigned User: Select user from dropdown
+   - Due Date: Set task deadline
+   - Can Complete: Toggle whether task can be marked complete
+5. Click "Save" to create the task
+6. Tasks appear in the task list (view-only, no edit/delete)
+7. AI assistant can help complete assigned tasks
+
+ALTERNATIVE: API Endpoint
+POST /api/TaskActions
+Headers: Authorization: Bearer <token>
+Body: {
+  "taskActionName": "string",
+  "assignedUserId": number,
+  "dueDate": "YYYY-MM-DD",
+  "canComplete": boolean,
+  "isComplete": false
+}
+
+HOW TO LOGIN
+------------
+1. Open the application at http://localhost:4200
+2. You will be redirected to the login page if not authenticated
+3. Enter your username (e.g., "jdoe", "asmith", "bjones")
+4. Click "Login"
+5. JWT token is stored in browser localStorage
+6. You are redirected to the main application
+7. Token is automatically included in all API requests
+8. Token expires after 8 hours
+
+DEFAULT USERS (Seeded in Database)
+-----------------------------------
+- Username: jdoe (John Doe)
+- Username: asmith (Alice Smith)
+- Username: bjones (Bob Jones)
+
+
+================================================================================
+                          AUTHENTICATION FLOW
+================================================================================
+
+1. USER AUTHENTICATION PROCESS
+   Step 1: User enters username on login page
+   Step 2: Frontend sends POST to /api/Authorization/login
+   Step 3: Backend validates username against Users table
+   Step 4: TokenService generates JWT with claims:
+           - userId: User's database ID
+           - userName: User's username
+           - firstName: User's first name
+           - lastName: User's last name
+           - correlationId: Unique request identifier
+           - sub: Subject (username)
+           - jti: JWT ID
+   Step 5: Backend returns token + user info in LoginResponse
+   Step 6: Frontend stores token in localStorage (key: 'auth_token')
+   Step 7: Frontend stores user info in localStorage (key: 'auth_user')
+   Step 8: AuthInterceptor adds token to all subsequent HTTP requests
+   Step 9: Backend BaseController reads claims from CurrentUser property
+   Step 10: User-specific data filtering applied (e.g., assigned cases only)
+
+2. AUTHORIZATION
+   - All controllers inherit from BaseController with [Authorize] attribute
+   - Only AuthorizationController has [AllowAnonymous] for login
+   - CurrentUser context available in all protected endpoints
+   - JWT token must be valid and not expired
+   - Bearer token format: "Authorization: Bearer <token>"
+
+
+================================================================================
+                          DATA RELATIONSHIPS
+================================================================================
+
+USER ←→ CASE RELATIONSHIPS
+--------------------------
+- One User can be "regarding user" for multiple Cases (1:N)
+- One User can be "assigned user" for multiple Cases (1:N)
+- Each Case has exactly one "regarding user" and one "assigned user"
+- Case detail endpoint performs INNER JOIN with Users table twice:
+  * Join Cases.RegardingUserId → Users.UserId (gets RegardingUser names)
+  * Join Cases.AssignedUserId → Users.UserId (gets AssignedUser names)
+
+USER ←→ TASK ACTION RELATIONSHIPS
+---------------------------------
+- One User can have multiple TaskActions assigned (1:N)
+- Each TaskAction has exactly one assigned user
+
+CASE ←→ TASK ACTION
+-------------------
+- Independent entities (no direct foreign key relationship)
+- Tasks can be associated with cases through business logic
+- Both share user assignments
+
+
+================================================================================
+                          API ENDPOINTS
+================================================================================
+
+AUTHENTICATION ENDPOINTS
+------------------------
+POST /api/Authorization/login
+  - Body: { "username": "string" }
+  - Returns: { "token": "jwt_string", "user": { user_object } }
+  - Public endpoint (no authentication required)
+
+POST /api/Authorization/logout
+  - Returns: { "message": "Logged out successfully" }
+  - Public endpoint
+
+USER ENDPOINTS (Protected)
+---------------------------
+GET    /api/Users              - Get all users
+GET    /api/Users/{id}         - Get user by ID
+POST   /api/Users              - Create new user
+PUT    /api/Users/{id}         - Update user
+DELETE /api/Users/{id}         - Delete user
+
+CASE ENDPOINTS (Protected)
+---------------------------
+GET    /api/Cases              - Get cases assigned to current user (filtered)
+GET    /api/Cases/{id}         - Get case by ID with user names (inner join)
+                                 Returns CaseDetailDto with full names
+POST   /api/Cases              - Create new case
+PUT    /api/Cases/{id}         - Update case
+DELETE /api/Cases/{id}         - Delete case
+
+TASK ACTION ENDPOINTS (Protected)
+----------------------------------
+GET    /api/TaskActions        - Get all task actions
+GET    /api/TaskActions/{id}   - Get task action by ID
+POST   /api/TaskActions        - Create new task action
+PUT    /api/TaskActions/{id}   - Update task action
+DELETE /api/TaskActions/{id}   - Delete task action
+
+
+================================================================================
+                          SPECIAL FEATURES
+================================================================================
+
+1. USER-SPECIFIC DATA FILTERING
+   - GetAllCases endpoint automatically filters cases by CurrentUser.UserId
+   - Users only see cases where they are the assigned user
+   - Implements data security and privacy at API level
+
+2. CASE DETAIL WITH USER NAMES
+   - GetCaseById returns CaseDetailDto (not just Case entity)
+   - Performs INNER JOIN with Users table twice:
+     * First join: Cases → Users (RegardingUserId → UserId)
+     * Second join: Cases → Users (AssignedUserId → UserId)
+   - Returns full names for both regarding and assigned users
+   - Frontend displays "John Doe" instead of "User ID: 1"
+
+3. CORRELATION ID TRACKING
+   - Every JWT token includes unique correlationId
+   - Available via CurrentUser.CorrelationId in all controllers
+   - Used for request tracing and logging across services
+   - Helps in debugging and audit trails
+
+4. BASE CONTROLLER PATTERN
+   - All controllers inherit from BaseController
+   - Automatic [Authorize] attribute enforcement
+   - CurrentUser property provides authenticated user context
+   - Protected Logger property for consistent logging
+   - Eliminates code duplication across controllers
+
+5. ACCESSIBILITY (508c COMPLIANCE)
+   - WCAG AA/AAA compliant color contrast
+   - ARIA labels on all interactive elements
+   - Keyboard navigation support
+   - Required field indicators with asterisks
+   - Focus indicators on form fields
+   - Screen reader friendly
+   - High contrast light theme
+
+
+================================================================================
+                          AI TASK COMPLETION
+================================================================================
+
+AI-ASSISTED TASK COMPLETION FEATURE
+------------------------------------
+The Case Manager application includes an AI-powered system to help users 
+complete tasks assigned to them efficiently.
+
+HOW IT WORKS:
+1. User views their assigned tasks in Task Actions module
+2. User selects a task they need help completing
+3. AI assistant (Digital Worker) analyzes:
+   - Task description and requirements
+   - Related case information
+   - User's historical task completion patterns
+   - Current task priority and deadline
+4. Digital Worker provides:
+   - Step-by-step completion guidance
+   - Automated task execution where possible
+   - Required information gathering
+   - Quality checks and validation
+5. User reviews AI suggestions and approves completion
+6. Task status updated automatically
+
+BENEFITS:
+- Faster task completion times
+- Reduced errors and rework
+- Consistent task execution
+- Learning from historical data
+- 24/7 availability for assistance
+
+
+================================================================================
+                    DIGITAL WORKER AI CHAT AGENT
+================================================================================
+
+ABOUT DIGITAL WORKER
+--------------------
+Digital Worker is an intelligent AI chat agent integrated into the Case Manager
+application. It serves as a virtual assistant to help users navigate and use 
+the application effectively.
+
+CAPABILITIES:
+1. Answer questions about application features
+2. Explain how to create users, cases, and tasks
+3. Provide guidance on navigation and workflows
+4. Help troubleshoot common issues
+5. Explain business processes and rules
+6. Offer tips and best practices
+7. Assist with AI task completion features
+8. Provide contextual help based on current page/activity
+
+HOW TO USE DIGITAL WORKER:
+1. Click on the Digital Worker chat icon in the application
+2. Type your question in natural language
+3. Digital Worker responds with relevant information
+4. Ask follow-up questions for clarification
+5. Digital Worker has access to this documentation
+
+EXAMPLE QUESTIONS:
+- "How do I create a new case?"
+- "What is the difference between regarding user and assigned user?"
+- "How does authentication work in this application?"
+- "Can you help me complete this task?"
+- "Why can't I see all cases in the system?"
+- "How do I assign a task to another user?"
+
+KNOWLEDGE BASE:
+Digital Worker has access to:
+- Complete application documentation (this file)
+- System architecture and technical details
+- User guides and workflows
+- API endpoint specifications
+- Business rules and data relationships
+- Troubleshooting guides
+
+
+================================================================================
+                          TECHNICAL DETAILS
+================================================================================
+
+JWT TOKEN CONFIGURATION
+-----------------------
+Issuer: CaseManagerApi
+Audience: CaseManagerClient
+Secret Key: Stored in appsettings.json
+Algorithm: HS256 (HMAC-SHA256)
+Expiration: 8 hours
+Claims: userId, userName, firstName, lastName, correlationId, sub, jti
+
+TOKEN VALIDATION PARAMETERS
+---------------------------
+- ValidateIssuer: true
+- ValidateAudience: true
+- ValidateLifetime: true
+- ValidateIssuerSigningKey: true
+- ClockSkew: Default (5 minutes)
+
+CORS CONFIGURATION
+------------------
+Allowed Origin: http://localhost:4200
+Allowed Methods: GET, POST, PUT, DELETE
+Allowed Headers: Content-Type, Authorization
+
+DATABASE CONNECTION
+-------------------
+Connection String: "Data Source=casemanager.db"
+Provider: Microsoft.EntityFrameworkCore.Sqlite
+Database File: CaseManager.Api/casemanager.db
+
+FRONTEND PROXY
+--------------
+All requests to /api are proxied to http://localhost:5226
+Configuration: CaseManager.web/proxy.json
+
+
+================================================================================
+                          STARTUP INSTRUCTIONS
+================================================================================
+
+STARTING THE APPLICATION
+------------------------
+Option 1: Using Startup Script
+  $ cd /path/to/CaseManager
+  $ bash start.sh
+
+Option 2: Manual Startup
+  Terminal 1 (Backend):
+    $ cd CaseManager.Api
+    $ dotnet run
+
+  Terminal 2 (Frontend):
+    $ cd CaseManager.web
+    $ npm start
+    or
+    $ npx ng serve
+
+ACCESSING THE APPLICATION
+-------------------------
+Frontend: http://localhost:4200
+Backend API: http://localhost:5226
+Swagger UI: http://localhost:5226/swagger
+
+STOPPING THE APPLICATION
+------------------------
+Press Ctrl+C in each terminal, or:
+$ lsof -ti:5226 | xargs kill -9  # Kill backend
+$ lsof -ti:4200 | xargs kill -9  # Kill frontend
+
+
+================================================================================
+                          TROUBLESHOOTING
+================================================================================
+
+COMMON ISSUES AND SOLUTIONS
+----------------------------
+
+1. "Backend failed to start - port already in use"
+   Solution: Kill existing process on port 5226
+   $ lsof -ti:5226 | xargs kill -9
+
+2. "Frontend failed to start - port already in use"
+   Solution: Kill existing process on port 4200
+   $ lsof -ti:4200 | xargs kill -9
+
+3. "401 Unauthorized" errors
+   Solution: Login again to get fresh JWT token
+   Check token expiration (8 hour limit)
+
+4. "Cannot see other users' cases"
+   Expected behavior: You only see cases assigned to you
+   This is a security feature, not a bug
+
+5. Database errors
+   Solution: Check if casemanager.db exists in CaseManager.Api folder
+   Migrations will create it automatically on first run
+
+6. CORS errors in browser console
+   Solution: Ensure backend is running on port 5226
+   Check proxy.json configuration in frontend
+
+7. "Invalid username" on login
+   Solution: Use seeded usernames: jdoe, asmith, or bjones
+   Or create a new user first via Users module
+
+
+================================================================================
+                          VERSION INFORMATION
+================================================================================
+
+Backend:
+- .NET: 8.0
+- ASP.NET Core: 8.0
+- Entity Framework Core: 9.0
+- SQLite: Latest
+- JWT Bearer: 8.0.19
+- System.IdentityModel.Tokens.Jwt: 8.0.2
+
+Frontend:
+- Angular: 20.x
+- Angular Material: 20.x
+- TypeScript: 5.x
+- RxJS: 7.x
+- Node.js: 18+ recommended
+
+================================================================================
+                          FUTURE ENHANCEMENTS
+================================================================================
+
+PLANNED FEATURES
+----------------
+1. Enhanced AI task completion automation
+2. Real-time notifications for task assignments
+3. Advanced reporting and analytics dashboard
+4. Multi-language support
+5. Mobile application
+6. Integration with external calendar systems
+7. File attachments for cases and tasks
+8. Comments and collaboration features
+9. Audit log and change history
+10. Advanced search and filtering
+11. Bulk operations
+12. Email notifications
+13. Role-based permissions (beyond authentication)
+14. Case templates and workflows
+15. Dashboard with metrics and KPIs
+
+
+================================================================================
+                             CONCLUSION
+================================================================================
+
+This documentation provides comprehensive information about the Case Manager 
+application for AI assistants (Digital Worker) to answer user questions 
+effectively. The application combines modern web technologies with AI-powered 
+features to deliver an efficient case management solution.
+
+For technical support or additional questions, consult the Digital Worker 
+AI chat agent within the application.
+
+Last Updated: October 22, 2025
+Version: 1.0

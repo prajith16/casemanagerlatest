@@ -1,0 +1,45 @@
+1. Create a solution for ASP.NET core CaseManager
+2. Create a webapi project call CaseManager.Api with controller and to the solution
+
+3. Add Model folder with User, Cases, TaskAction
+    User has -> UserId, UserName, FirstName, LastName, Address
+    Case has -> CaseId, Case, RegardingUserId, IsComplete, CanComplete, AssignedUserId
+
+    TaskAction has -> TaskActionId, TaskAction, CaseId, UserId 
+
+4. Add Sqlite Database and Create tables for Modal and seed data 
+
+5. Create Services and Repository folder and create methods for CURD, Add Dependency Injection, Connection string from appsettings.json
+
+6. Create Controllers, configure swagger with documentation
+
+7. Create an angular application with foldername as CaseManager.web, use scss. Remove unneccesary code. Use everforest color theme of the webapp
+
+8. Add material ui , Create seperate module user and cases . Create interface, Services based on backend model User can have add, edit, detail, list , delete. Case can have add, edit, list, detail, delete. TaskAction has list and detail page
+
+9. Add a bash script to start frontend and backend
+
+10. Add Proxy.json and add backend endpoint. Also update angular service
+
+11. On the backend add Authentication and Authorization, Simple Authentication just check username of user table no need of password. Add Jwt token and include username, userid, corleation id as claim. Add jwt issuer, audience and secret key on app settings. Use Authorization controller for login, logout , generate tokens for login
+
+12. Frontend add login page, add routegard for all the modules, add logout functionality, intercepter to include token to api call.
+
+13. Front end After login get the token and save in local storage. Interceptor should take the token from local storage. Logout should delete the local storage.
+
+14. Onbackend add authorize to controller, create a user context in backend which should read the claim from token and available in all the controller. For that create a BaseController that extends ControllerBase. All the Controller apart from Authorization one extends from BaseController. Authorization controller should be anonymous
+
+15. For getAllCases in Case controller get the userid and returns the cases with assignedUserId is Userid
+
+16. Case detail should inner join with user table and display first and last name in the frontend case detail page
+
+17. Create a txt document inside backend ang generate the documentation about the Case manager application. What are the features of the case manager application. modules and how to create user and how to create cases. Another feature of this application its help to complete task assigned to user by ai. It also has ai chat agent Name Digital Worker and it helps user to clarify question about the application. Purpose of this document is to have all information to feed to AI to answer the questions
+
+
+18. On the backend create an aiservice which uses Semantic Kernel package. AI service use Azureopen ai and github key which should be saved in appsettings. It should have a chat end point (chatController) that accepts user input and make use of content of CASE_MANAGER_DOCUMENTATION.txt to answer questions about the casemanager. Make use of SignalR to send response so that it may feel like ai prompt. Also keep track of chat history to answer questions
+
+19. Create a chat widget on front end that can call api to returns the response and show in widget
+
+20. Create an project for MCPServer that runs on port 5433. It has 2 methods list of the can complete cases and complete tasks which will make IsComplete as true and insert in taskAction with Task name as casename , case id , userid as logged in userid
+
+21. Create a Model Context Protocol (MCP) client in frontend angular application that will list in chat widget and button to call Model Context Protocol (MCP) server tools with arguments as logged in userid 

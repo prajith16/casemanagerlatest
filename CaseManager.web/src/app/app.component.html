@@ -1,0 +1,32 @@
+<mat-toolbar color="primary" class="app-toolbar" *ngIf="authService.isAuthenticated()">
+  <span>CaseManager</span>
+  <span class="spacer"></span>
+  <button mat-button routerLink="/users">
+    <mat-icon>people</mat-icon>
+    <span>Users</span>
+  </button>
+  <button mat-button routerLink="/cases">
+    <mat-icon>work</mat-icon>
+    <span>Cases</span>
+  </button>
+  <button mat-button routerLink="/task-actions">
+    <mat-icon>task</mat-icon>
+    <span>Task Actions</span>
+  </button>
+  <span class="spacer"></span>
+  <span class="user-info" *ngIf="currentUser$ | async as user">
+    <mat-icon>account_circle</mat-icon>
+    {{ user.firstName }} {{ user.lastName }}
+  </span>
+  <button mat-button (click)="logout()" class="logout-button">
+    <mat-icon>logout</mat-icon>
+    <span>Logout</span>
+  </button>
+</mat-toolbar>
+
+<div class="container">
+  <router-outlet></router-outlet>
+</div>
+
+<!-- Chat Widget - only show when authenticated -->
+<app-chat-widget *ngIf="authService.isAuthenticated()"></app-chat-widget>

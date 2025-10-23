@@ -1,0 +1,306 @@
+/* You can add global styles to this file, and also import other style files */
+@use './theme.scss';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+body {
+  background-color: #f5f5f5;
+  color: #000000;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.mat-mdc-card {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #d0d0d0 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  
+  .mat-mdc-card-title {
+    color: #1976d2 !important;
+    font-size: 24px !important;
+    font-weight: 600 !important;
+  }
+  
+  .mat-mdc-card-subtitle {
+    color: #616161 !important;
+  }
+}
+
+.mat-mdc-raised-button {
+  font-weight: 500 !important;
+  
+  &.mat-primary {
+    background-color: #1976d2 !important;
+    color: #ffffff !important;
+    
+    &:hover {
+      background-color: #1565c0 !important;
+    }
+    
+    &:focus {
+      outline: 3px solid #f9a825 !important;
+      outline-offset: 2px !important;
+    }
+  }
+  
+  &.mat-accent {
+    background-color: #388e3c !important;
+    color: #ffffff !important;
+    
+    &:hover {
+      background-color: #2e7d32 !important;
+    }
+    
+    &:focus {
+      outline: 3px solid #f9a825 !important;
+      outline-offset: 2px !important;
+    }
+  }
+  
+  &.mat-warn {
+    background-color: #d32f2f !important;
+    color: #ffffff !important;
+    
+    &:hover {
+      background-color: #c62828 !important;
+    }
+    
+    &:focus {
+      outline: 3px solid #f9a825 !important;
+      outline-offset: 2px !important;
+    }
+  }
+}
+
+.mat-mdc-icon-button {
+  &:focus {
+    outline: 2px solid #f9a825 !important;
+    outline-offset: 2px !important;
+  }
+  
+  &.mat-primary {
+    color: #1976d2 !important;
+  }
+  
+  &.mat-accent {
+    color: #388e3c !important;
+  }
+  
+  &.mat-warn {
+    color: #d32f2f !important;
+  }
+}
+
+.mat-mdc-table {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #d0d0d0 !important;
+  
+  .mat-mdc-cell, .mat-mdc-header-cell {
+    color: #000000 !important;
+    border-bottom-color: #d0d0d0 !important;
+    padding: 16px !important;
+    font-size: 14px !important;
+  }
+  
+  .mat-mdc-header-cell {
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    background-color: #e3f2fd !important;
+    color: #1976d2 !important;
+  }
+  
+  .mat-mdc-row {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #d0d0d0 !important;
+    
+    &:hover {
+      background-color: #f5f5f5 !important;
+      cursor: pointer;
+    }
+    
+    &:nth-child(even) {
+      background-color: #fafafa !important;
+      
+      &:hover {
+        background-color: #f5f5f5 !important;
+      }
+    }
+  }
+}
+
+.mat-mdc-header-row {
+  background-color: #e3f2fd !important;
+  min-height: 56px !important;
+}
+
+.mat-mdc-row:hover {
+  background-color: #f5f5f5 !important;
+}
+
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    background-color: #ffffff !important;
+    border: 2px solid #d0d0d0 !important;
+    border-radius: 4px !important;
+  }
+  
+  .mat-mdc-form-field-label {
+    color: #000000 !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+  }
+  
+  // When label is floating (field has value or is focused)
+  &.mat-form-field-should-float .mat-mdc-form-field-label {
+    color: #000000 !important;
+    font-weight: 600 !important;
+    transform: translateY(-1.25rem) scale(0.85) !important;
+  }
+  
+  input, textarea, select {
+    color: #000000 !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    background-color: #ffffff !important;
+    padding-top: 1.25rem !important;
+    
+    &::placeholder {
+      color: #4a4a4a !important;
+      opacity: 0.7 !important;
+    }
+    
+    &:focus {
+      outline: 3px solid var(--yellow) !important;
+      outline-offset: 2px !important;
+    }
+  }
+  
+  &.mat-focused {
+    .mat-mdc-text-field-wrapper {
+      border-color: #1976d2 !important;
+      border-width: 2px !important;
+    }
+    
+    .mat-mdc-form-field-label {
+      color: #000000 !important;
+    }
+  }
+  
+  .mat-mdc-form-field-hint,
+  .mdc-text-field__input::placeholder {
+    color: #4a4a4a !important;
+    opacity: 0.7 !important;
+  }
+  
+  // Ensure proper spacing for the floating label
+  .mat-mdc-form-field-infix {
+    padding-top: 1.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  
+  // Hide placeholder when label is not floating
+  &:not(.mat-form-field-should-float) {
+    input::placeholder,
+    textarea::placeholder {
+      opacity: 0 !important;
+    }
+  }
+}
+
+// Checkbox improvements
+.mat-mdc-checkbox {
+  .mdc-checkbox__background {
+    border-color: #1976d2 !important;
+  }
+  
+  &.mat-mdc-checkbox-checked .mdc-checkbox__background {
+    background-color: #1976d2 !important;
+    border-color: #1976d2 !important;
+  }
+  
+  .mdc-checkbox__checkmark {
+    color: #ffffff !important;
+  }
+  
+  .mdc-label,
+  .mat-mdc-checkbox-label {
+    color: #000000 !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+  }
+}
+
+// Select dropdown improvements
+.mat-mdc-select {
+  color: #000000 !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  
+  .mat-mdc-select-value {
+    color: #000000 !important;
+  }
+  
+  .mat-mdc-select-arrow {
+    color: #000000 !important;
+  }
+}
+
+.mat-mdc-select-panel {
+  background-color: #ffffff !important;
+  
+  .mat-mdc-option {
+    color: #000000 !important;
+    font-size: 16px !important;
+    
+    &:hover {
+      background-color: #e3f2fd !important;
+    }
+    
+    &.mat-mdc-option-active,
+    &.mat-selected {
+      background-color: #1976d2 !important;
+      color: #ffffff !important;
+      font-weight: 600 !important;
+    }
+  }
+}
+
+// Link and navigation improvements
+a, .mat-mdc-button {
+  &:focus {
+    outline: 2px solid var(--yellow) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+// Skip to main content link for screen readers
+.skip-to-main {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1em;
+  background-color: var(--green);
+  color: #1a1f23;
+  text-decoration: none;
+  
+  &:focus {
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+  }
+}
