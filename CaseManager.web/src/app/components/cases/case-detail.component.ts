@@ -35,12 +35,6 @@ import { CaseDetail } from '../../models/case.model';
             <span class="value">{{ case.caseName }}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Regarding User:</span>
-            <span class="value"
-              >{{ case.regardingUserFirstName }} {{ case.regardingUserLastName }}</span
-            >
-          </div>
-          <div class="detail-row">
             <span class="label">Assigned User:</span>
             <span class="value"
               >{{ case.assignedUserFirstName }} {{ case.assignedUserLastName }}</span

@@ -16,11 +16,6 @@ public class CaseDto
     public string CaseName { get; set; } = string.Empty;
 
     /// <summary>
-    /// User ID this case is regarding
-    /// </summary>
-    public int RegardingUserId { get; set; }
-
-    /// <summary>
     /// Indicates whether the case is complete
     /// </summary>
     public bool IsComplete { get; set; }

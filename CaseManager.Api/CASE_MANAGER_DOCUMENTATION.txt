@@ -107,7 +107,7 @@ BACKEND MODULES
 
 1. MODELS (CaseManager.Api/Models/)
    - User: User entity with UserId, UserName, FirstName, LastName, Address
-   - Case: Case entity with CaseId, CaseName, RegardingUserId, AssignedUserId, 
+   - Case: Case entity with CaseId, CaseName, AssignedUserId, 
            IsComplete, CanComplete
    - TaskAction: Task entity with TaskActionId, TaskActionName, AssignedUserId, 
                  DueDate, IsComplete, CanComplete
@@ -249,7 +249,6 @@ POST /api/Cases
 Headers: Authorization: Bearer <token>
 Body: {
   "caseName": "string",
-  "regardingUserId": number,
   "assignedUserId": number,
   "canComplete": boolean,
   "isComplete": false
@@ -335,11 +334,9 @@ DEFAULT USERS (Seeded in Database)
 
 USER ←→ CASE RELATIONSHIPS
 --------------------------
-- One User can be "regarding user" for multiple Cases (1:N)
-- One User can be "assigned user" for multiple Cases (1:N)
-- Each Case has exactly one "regarding user" and one "assigned user"
-- Case detail endpoint performs INNER JOIN with Users table twice:
-  * Join Cases.RegardingUserId → Users.UserId (gets RegardingUser names)
+- One User can be assigned to multiple Cases (1:N)
+- Each Case has exactly one assigned user
+- Case detail endpoint performs INNER JOIN with Users table:
   * Join Cases.AssignedUserId → Users.UserId (gets AssignedUser names)
 
 USER ←→ TASK ACTION RELATIONSHIPS
@@ -406,10 +403,9 @@ DELETE /api/TaskActions/{id}   - Delete task action
 
 2. CASE DETAIL WITH USER NAMES
    - GetCaseById returns CaseDetailDto (not just Case entity)
-   - Performs INNER JOIN with Users table twice:
-     * First join: Cases → Users (RegardingUserId → UserId)
-     * Second join: Cases → Users (AssignedUserId → UserId)
-   - Returns full names for both regarding and assigned users
+   - Performs INNER JOIN with Users table:
+     * Join: Cases → Users (AssignedUserId → UserId)
+   - Returns full names for assigned users
    - Frontend displays "John Doe" instead of "User ID: 1"
 
 3. CORRELATION ID TRACKING

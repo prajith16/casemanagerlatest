@@ -63,29 +63,6 @@ import { CaseUpdateService } from '../../services/case-update.service';
 
             <mat-form-field appearance="fill" class="full-width">
               <mat-label
-                >Regarding User
-                <span class="required-indicator" aria-label="required">*</span></mat-label
-              >
-              <mat-select
-                formControlName="regardingUserId"
-                placeholder="Select regarding user"
-                aria-required="true"
-                aria-describedby="regardingUserId-error"
-              >
-                <mat-option *ngFor="let user of users" [value]="user.userId">
-                  {{ user.firstName }} {{ user.lastName }} ({{ user.userName }})
-                </mat-option>
-              </mat-select>
-              <mat-error
-                id="regardingUserId-error"
-                *ngIf="caseForm.get('regardingUserId')?.hasError('required')"
-              >
-                Regarding user is required
-              </mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="fill" class="full-width">
-              <mat-label
                 >Assigned User
                 <span class="required-indicator" aria-label="required">*</span></mat-label
               >
@@ -294,7 +271,6 @@ export class CaseFormComponent implements OnInit {
   ) {
     this.caseForm = this.fb.group({
       caseName: ['', Validators.required],
-      regardingUserId: ['', Validators.required],
       assignedUserId: ['', Validators.required],
       isComplete: [false],
       canComplete: [false],
@@ -329,7 +305,6 @@ export class CaseFormComponent implements OnInit {
       next: (caseItem) => {
         this.caseForm.patchValue({
           caseName: caseItem.caseName,
-          regardingUserId: caseItem.regardingUserId,
           assignedUserId: caseItem.assignedUserId,
           isComplete: caseItem.isComplete,
           canComplete: caseItem.canComplete,
@@ -353,7 +328,6 @@ export class CaseFormComponent implements OnInit {
       const caseData: Case = {
         caseId: this.isEditMode && this.caseId ? this.caseId : 0,
         caseName: formValue.caseName,
-        regardingUserId: +formValue.regardingUserId,
         assignedUserId: +formValue.assignedUserId,
         isComplete: formValue.isComplete,
         canComplete: formValue.canComplete,

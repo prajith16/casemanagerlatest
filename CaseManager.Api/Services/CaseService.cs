@@ -32,7 +32,6 @@ public class CaseService : ICaseService
                                    {
                                        CaseId = c.CaseId,
                                        CaseName = c.CaseName,
-                                       RegardingUserId = c.RegardingUserId,
                                        IsComplete = c.IsComplete,
                                        CanComplete = c.CanComplete,
                                        AssignedUserId = c.AssignedUserId,
@@ -54,22 +53,15 @@ public class CaseService : ICaseService
         var caseDetail = await _context.Cases
             .Where(c => c.CaseId == id)
             .Join(_context.Users,
-                c => c.RegardingUserId,
+                c => c.AssignedUserId,
                 u => u.UserId,
-                (c, regardingUser) => new { Case = c, RegardingUser = regardingUser })
-            .Join(_context.Users,
-                temp => temp.Case.AssignedUserId,
-                u => u.UserId,
-                (temp, assignedUser) => new CaseDetailDto
+                (c, assignedUser) => new CaseDetailDto
                 {
-                    CaseId = temp.Case.CaseId,
-                    CaseName = temp.Case.CaseName,
-                    RegardingUserId = temp.Case.RegardingUserId,
-                    RegardingUserFirstName = temp.RegardingUser.FirstName,
-                    RegardingUserLastName = temp.RegardingUser.LastName,
-                    IsComplete = temp.Case.IsComplete,
-                    CanComplete = temp.Case.CanComplete,
-                    AssignedUserId = temp.Case.AssignedUserId,
+                    CaseId = c.CaseId,
+                    CaseName = c.CaseName,
+                    IsComplete = c.IsComplete,
+                    CanComplete = c.CanComplete,
+                    AssignedUserId = c.AssignedUserId,
                     AssignedUserFirstName = assignedUser.FirstName,
                     AssignedUserLastName = assignedUser.LastName
                 })

@@ -3,7 +3,7 @@
 
 3. Add Model folder with User, Cases, TaskAction
     User has -> UserId, UserName, FirstName, LastName, Address
-    Case has -> CaseId, Case, RegardingUserId, IsComplete, CanComplete, AssignedUserId
+    Case has -> CaseId, Case, IsComplete, CanComplete, AssignedUserId
 
     TaskAction has -> TaskActionId, TaskAction, CaseId, UserId 
 
@@ -43,3 +43,7 @@
 20. Create an project for MCPServer that runs on port 5433. It has 2 methods list of the can complete cases and complete tasks which will make IsComplete as true and insert in taskAction with Task name as casename , case id , userid as logged in userid
 
 21. Create a Model Context Protocol (MCP) client in frontend angular application that will list in chat widget and button to call Model Context Protocol (MCP) server tools with arguments as logged in userid 
+
+22. From the chat widget when user enters to create a case for an action item with assinged to username and regarding username . Create a case with case as action item mentioned for the assigned user regarding the mentioned user in regarding content. First let me know what the best approach to implement this
+
+23. From the chat widget Prompt should behave 2 way if your asks to create a case or ticket for some action item and assigned to user name it should create the a case and assign to user. other questions it should help to answer their query. Let me know what are the approches are there to implement this

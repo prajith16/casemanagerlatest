@@ -1,6 +1,7 @@
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.Collections.Concurrent;
 using System.Text;
 using CaseManager.Api.Models;
@@ -8,7 +9,7 @@ using CaseManager.Api.Models;
 namespace CaseManager.Api.Services;
 
 /// <summary>
-/// AI Service implementation using Semantic Kernel and Azure OpenAI
+/// AI Service implementation using Semantic Kernel and Azure OpenAI with function calling
 /// </summary>
 public class AIService : IAIService
 {
@@ -17,12 +18,17 @@ public class AIService : IAIService
     private readonly ILogger<AIService> _logger;
     private readonly string _documentationContent;
     private readonly ConcurrentDictionary<string, ChatHistory> _sessionHistories;
+    private readonly CaseManagementPlugin _caseManagementPlugin;
     private const int MaxHistoryMessages = 20;
 
-    public AIService(IConfiguration configuration, ILogger<AIService> logger)
+    public AIService(
+        IConfiguration configuration,
+        ILogger<AIService> logger,
+        CaseManagementPlugin caseManagementPlugin)
     {
         _logger = logger;
         _sessionHistories = new ConcurrentDictionary<string, ChatHistory>();
+        _caseManagementPlugin = caseManagementPlugin;
 
         // Load documentation content - try multiple paths
         var possiblePaths = new[]
@@ -87,6 +93,11 @@ public class AIService : IAIService
         }
 
         _kernel = builder.Build();
+
+        // Register the CaseManagementPlugin to enable function calling
+        _kernel.Plugins.AddFromObject(_caseManagementPlugin, "CaseManagement");
+        _logger.LogInformation("Registered CaseManagementPlugin with Semantic Kernel");
+
         _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
     }
 
@@ -123,10 +134,21 @@ public class AIService : IAIService
             _logger.LogInformation("User message in session {SessionId}: {Message}",
                 sessionId, message.Length > 100 ? message.Substring(0, 100) + "..." : message);
 
-            // Get streaming response
+            // Configure execution settings to enable automatic function calling
+            var executionSettings = new OpenAIPromptExecutionSettings
+            {
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+                Temperature = 0.7,
+                MaxTokens = 2000
+            };
+
+            // Get streaming response with automatic function calling
             var responseBuilder = new StringBuilder();
 
-            await foreach (var chunk in _chatCompletionService.GetStreamingChatMessageContentsAsync(history))
+            await foreach (var chunk in _chatCompletionService.GetStreamingChatMessageContentsAsync(
+                history,
+                executionSettings,
+                _kernel))
             {
                 var content = chunk.Content;
                 if (!string.IsNullOrEmpty(content))
@@ -193,11 +215,26 @@ Here is the complete documentation for the Case Manager application:
 
 Your responsibilities:
 1. Answer questions about the Case Manager application features and functionality
-2. Explain how to create users, cases, and task actions
-3. Help users understand authentication and authorization
-4. Clarify business processes and workflows
-5. Provide troubleshooting assistance
-6. Guide users through the application features
+2. Create cases/tasks when users request them - use the CreateCase function when users ask to create, assign, or set up tasks
+3. Explain how to create users, cases, and task actions
+4. Help users understand authentication and authorization
+5. Clarify business processes and workflows
+6. Provide troubleshooting assistance
+7. Guide users through the application features
+
+IMPORTANT: You have access to functions that can perform actions in the system:
+- CreateCase: Use this when users ask to create a case, task, ticket, or assign work to someone
+  Examples: ""create a case for reviewing budget assigned to John"", ""assign a task to Mary to fix the printer"", ""make a new ticket for Bob to send the report""
+- GetUserByUsername: Use this to look up user information
+- ListAllUsers: Use this to show all available users
+- GetCaseById: Use this to get details about a specific case
+
+When a user requests to create a case/task:
+1. Use the CreateCase function with the task description and the username of who should do the work
+2. The function will handle user lookup and case creation automatically
+3. After the function executes, confirm the action to the user in a friendly way
+
+For all other questions, answer based on the documentation provided.
 
 Always be helpful, professional, and reference the documentation when answering questions.
 Keep responses concise but informative. If you don't know something, say so honestly.";

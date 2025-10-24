@@ -153,7 +153,6 @@ The application uses SQLite with Entity Framework Core. The database is automati
 
 - `CaseId` (int): Unique identifier
 - `CaseName` (string): Case title/description
-- `RegardingUserId` (int): User ID this case is regarding
 - `IsComplete` (bool): Whether the case is complete
 - `CanComplete` (bool): Whether the case can be completed
 - `AssignedUserId` (int): User ID to whom the case is assigned
@@ -250,7 +249,6 @@ curl -X PUT "http://localhost:5226/api/cases/1" \
   -d '{
     "caseId": 1,
     "caseName": "Updated Case Name",
-    "regardingUserId": 1,
     "isComplete": true,
     "canComplete": true,
     "assignedUserId": 2

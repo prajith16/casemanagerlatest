@@ -66,7 +66,6 @@ public class CaseManagerDbContext : DbContext
             {
                 CaseId = 1,
                 CaseName = "Customer Support Request",
-                RegardingUserId = 1,
                 IsComplete = false,
                 CanComplete = true,
                 AssignedUserId = 2
@@ -75,7 +74,6 @@ public class CaseManagerDbContext : DbContext
             {
                 CaseId = 2,
                 CaseName = "Technical Issue Investigation",
-                RegardingUserId = 2,
                 IsComplete = false,
                 CanComplete = false,
                 AssignedUserId = 3
@@ -84,7 +82,6 @@ public class CaseManagerDbContext : DbContext
             {
                 CaseId = 3,
                 CaseName = "Account Verification",
-                RegardingUserId = 3,
                 IsComplete = true,
                 CanComplete = true,
                 AssignedUserId = 1

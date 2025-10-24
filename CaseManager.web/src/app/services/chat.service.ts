@@ -13,6 +13,7 @@ export class ChatService {
   private hubConnection: signalR.HubConnection | null = null;
   private messageChunk$ = new Subject<{ sessionId: string; chunk: string }>();
   private messageComplete$ = new Subject<string>();
+  private caseCreated$ = new Subject<any>();
   private sessionId: string = '';
 
   constructor(private http: HttpClient) {
@@ -25,6 +26,10 @@ export class ChatService {
 
   getMessageComplete(): Observable<string> {
     return this.messageComplete$.asObservable();
+  }
+
+  getCaseCreated(): Observable<any> {
+    return this.caseCreated$.asObservable();
   }
 
   async startConnection(): Promise<void> {
@@ -47,6 +52,11 @@ export class ChatService {
 
     this.hubConnection.on('ReceiveMessageComplete', (sessionId: string) => {
       this.messageComplete$.next(sessionId);
+    });
+
+    this.hubConnection.on('CaseCreated', (caseData: any) => {
+      console.log('Case created notification received:', caseData);
+      this.caseCreated$.next(caseData);
     });
 
     try {

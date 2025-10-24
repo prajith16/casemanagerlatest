@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -76,11 +77,8 @@ import { CaseUpdateService } from '../../services/case-update.service';
             <p>Checking for pending tasks...</p>
           </div>
 
-          <!-- Pending Tasks Section -->
-          <div
-            *ngIf="!loadingTasks && pendingTasks.length > 0 && !hasCompletedInitialTasks"
-            class="pending-tasks-section"
-          >
+          <!-- Pending Tasks Section - Always visible when there are tasks -->
+          <div *ngIf="!loadingTasks && pendingTasks.length > 0" class="pending-tasks-section">
             <div class="tasks-header">
               <mat-icon class="tasks-icon">assignment</mat-icon>
               <h4>You have {{ pendingTasks.length }} task(s) to complete</h4>
@@ -98,6 +96,22 @@ import { CaseUpdateService } from '../../services/case-update.service';
                       </span>
                     </div>
                   </div>
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    class="complete-task-btn"
+                    (click)="completeTask(task)"
+                    [disabled]="executingTool === 'complete_task_' + task.caseId"
+                    matTooltip="Complete this task"
+                  >
+                    <mat-icon *ngIf="executingTool !== 'complete_task_' + task.caseId"
+                      >check_circle</mat-icon
+                    >
+                    <mat-spinner
+                      *ngIf="executingTool === 'complete_task_' + task.caseId"
+                      diameter="20"
+                    ></mat-spinner>
+                  </button>
                 </mat-card-content>
               </mat-card>
             </div>
@@ -107,11 +121,11 @@ import { CaseUpdateService } from '../../services/case-update.service';
                 color="primary"
                 class="complete-all-btn"
                 (click)="completeAllTasks()"
-                [disabled]="executingTool === 'complete_task'"
+                [disabled]="executingTool && executingTool.startsWith('complete_task')"
               >
                 <mat-icon>done_all</mat-icon>
                 Complete All Tasks
-                <mat-spinner *ngIf="executingTool === 'complete_task'" diameter="20"></mat-spinner>
+                <mat-spinner *ngIf="executingTool === 'complete_all'" diameter="20"></mat-spinner>
               </button>
             </div>
           </div>
@@ -131,12 +145,13 @@ import { CaseUpdateService } from '../../services/case-update.service';
             class="message"
             [class.user-message]="message.role === 'user'"
             [class.assistant-message]="message.role === 'assistant'"
+            [class.system]="message.role === 'system'"
           >
-            <div class="message-avatar">
+            <div class="message-avatar" *ngIf="message.role !== 'system'">
               <mat-icon *ngIf="message.role === 'user'">person</mat-icon>
               <mat-icon *ngIf="message.role === 'assistant'">smart_toy</mat-icon>
             </div>
-            <div class="message-content">
+            <div class="message-content" [class.system-content]="message.role === 'system'">
               <div class="message-text" [innerHTML]="formatMessageContent(message.content)"></div>
               <!-- Show complete button if this is a tasks message and there are pending tasks -->
               <button
@@ -778,10 +793,38 @@ import { CaseUpdateService } from '../../services/case-update.service';
         background: #f5f5f5;
         font-weight: 600;
       }
+
+      .flash-notification {
+        animation: pulse 0.5s ease-in-out 4;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        50% {
+          transform: scale(1.1);
+          box-shadow: 0 6px 20px rgba(25, 118, 210, 0.5);
+        }
+      }
+
+      .message.system {
+        text-align: center;
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border-left: 4px solid #1976d2;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 12px 0;
+        font-weight: 500;
+      }
     `,
   ],
 })
 export class ChatWidgetComponent implements OnInit, OnDestroy {
+  private http = inject(HttpClient);
+
   isExpanded = false;
   messages: ChatMessage[] = [];
   currentMessage = '';
@@ -852,6 +895,23 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
           if (sessionId === this.chatService.getSessionId()) {
             this.isLoading = false;
             this.scrollToBottom();
+          }
+        })
+      );
+
+      // Subscribe to case creation events
+      this.subscriptions.push(
+        this.chatService.getCaseCreated().subscribe((caseData) => {
+          console.log('Case created via chat:', caseData);
+
+          // Notify the case update service to refresh the grid
+          this.caseUpdateService.notifyCaseUpdate();
+
+          // If the case is assigned to the current user, show a notification and refresh tasks
+          if (this.currentUser && caseData.assignedUserId === this.currentUser.userId) {
+            this.showCaseAssignmentNotification(caseData);
+            // Refresh pending tasks since a new case was assigned
+            this.refreshPendingTasks();
           }
         })
       );
@@ -1007,7 +1067,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.executingTool = 'complete_task';
+    this.executingTool = 'complete_all';
     const userId = this.currentUser.userId;
     const tasksCount = this.pendingTasks.length;
 
@@ -1031,6 +1091,73 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.executingTool = null;
         this.addMcpErrorMessage('Failed to complete tasks', error);
+      },
+    });
+  }
+
+  completeTask(task: any) {
+    if (!this.currentUser || this.executingTool) {
+      return;
+    }
+
+    const caseId = task.caseId || task.CaseId;
+    const caseName = task.caseName || task.CaseName;
+    this.executingTool = `complete_task_${caseId}`;
+
+    // Use the HTTP client to complete the case directly
+    const apiUrl = 'http://localhost:5226/api';
+
+    this.http.get<any>(`${apiUrl}/Cases/${caseId}`).subscribe({
+      next: (caseData) => {
+        // Mark the case as complete
+        caseData.isComplete = true;
+
+        this.http.put(`${apiUrl}/Cases/${caseId}`, caseData).subscribe({
+          next: () => {
+            this.executingTool = null;
+
+            // Remove the completed task from the list
+            this.pendingTasks = this.pendingTasks.filter((t) => (t.caseId || t.CaseId) !== caseId);
+
+            // Notify that cases have been updated
+            this.caseUpdateService.notifyCaseUpdate();
+
+            const message: ChatMessage = {
+              role: 'assistant',
+              content: `✅ Task completed: "${caseName}"`,
+              timestamp: new Date(),
+            };
+            this.messages.push(message);
+            this.scrollToBottom();
+          },
+          error: (error) => {
+            this.executingTool = null;
+            this.addMcpErrorMessage(`Failed to complete task: ${caseName}`, error);
+          },
+        });
+      },
+      error: (error) => {
+        this.executingTool = null;
+        this.addMcpErrorMessage(`Failed to load task: ${caseName}`, error);
+      },
+    });
+  }
+
+  refreshPendingTasks() {
+    if (!this.currentUser) {
+      return;
+    }
+
+    const userId = this.currentUser.userId;
+
+    this.mcpClient.listCompletableCases(userId).subscribe({
+      next: (response) => {
+        console.log('Refreshed pending tasks:', response);
+        this.pendingTasks = response.cases || [];
+        this.scrollToBottom();
+      },
+      error: (error) => {
+        console.error('Error refreshing pending tasks:', error);
       },
     });
   }
@@ -1107,6 +1234,31 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     };
     this.messages.push(errorMessage);
     this.scrollToBottom();
+  }
+
+  private showCaseAssignmentNotification(caseData: any) {
+    // Add a system notification message to the chat
+    const notificationMessage: ChatMessage = {
+      role: 'system',
+      content: `🔔 You have been assigned a new case: "${caseData.caseName}" (Case ID: ${caseData.caseId})`,
+      timestamp: new Date(),
+    };
+    this.messages.push(notificationMessage);
+    this.scrollToBottom();
+
+    // Flash the chat icon to draw attention
+    this.flashChatIcon();
+  }
+
+  private flashChatIcon() {
+    // Add visual feedback by toggling a class (you can style this in CSS)
+    const chatButton = document.querySelector('.chat-toggle-button');
+    if (chatButton) {
+      chatButton.classList.add('flash-notification');
+      setTimeout(() => {
+        chatButton.classList.remove('flash-notification');
+      }, 2000);
+    }
   }
 
   formatToolName(toolName: string): string {

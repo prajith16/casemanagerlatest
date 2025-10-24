@@ -16,21 +16,6 @@ public class CaseDetailDto
     public string CaseName { get; set; } = string.Empty;
 
     /// <summary>
-    /// User ID this case is regarding
-    /// </summary>
-    public int RegardingUserId { get; set; }
-
-    /// <summary>
-    /// First name of the user this case is regarding
-    /// </summary>
-    public string RegardingUserFirstName { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Last name of the user this case is regarding
-    /// </summary>
-    public string RegardingUserLastName { get; set; } = string.Empty;
-
-    /// <summary>
     /// Indicates whether the case is complete
     /// </summary>
     public bool IsComplete { get; set; }

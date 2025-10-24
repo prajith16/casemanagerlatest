@@ -39,7 +39,12 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICaseService, CaseService>();
 builder.Services.AddScoped<ITaskActionService, TaskActionService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddSingleton<IAIService, AIService>();
+
+// Register CaseManagementPlugin as scoped (needs CaseService and UserService)
+builder.Services.AddScoped<CaseManagementPlugin>();
+
+// Register AIService as scoped (now depends on CaseManagementPlugin)
+builder.Services.AddScoped<IAIService, AIService>();
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

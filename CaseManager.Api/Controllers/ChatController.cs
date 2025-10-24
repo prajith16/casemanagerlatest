@@ -68,12 +68,40 @@ public class ChatController : BaseController
             // Notify completion
             await _hubContext.Clients.All.SendAsync("ReceiveMessageComplete", sessionId);
 
-            return Ok(new ChatResponse
+            // Parse the response to detect if a case was created
+            var chatResponse = new ChatResponse
             {
                 Message = response,
                 SessionId = sessionId,
                 Timestamp = DateTime.UtcNow
-            });
+            };
+
+            // Detect if a case was created from the AI response
+            if (response.Contains("✅ Successfully created case"))
+            {
+                chatResponse.CaseCreated = true;
+
+                // Try to extract case ID from response (format: "Case ID: 123")
+                var caseIdMatch = System.Text.RegularExpressions.Regex.Match(response, @"Case ID:\s*(\d+)");
+                if (caseIdMatch.Success && int.TryParse(caseIdMatch.Groups[1].Value, out int caseId))
+                {
+                    chatResponse.CreatedCaseId = caseId;
+                }
+
+                // Try to extract case name from response (format: "created case 'Case Name'")
+                var caseNameMatch = System.Text.RegularExpressions.Regex.Match(response, @"created case '([^']+)'");
+                if (caseNameMatch.Success)
+                {
+                    chatResponse.CreatedCaseName = caseNameMatch.Groups[1].Value;
+                }
+
+                Logger.LogInformation(
+                    "Case created via chat - CaseId: {CaseId}, CaseName: {CaseName}",
+                    chatResponse.CreatedCaseId,
+                    chatResponse.CreatedCaseName);
+            }
+
+            return Ok(chatResponse);
         }
         catch (Exception ex)
         {

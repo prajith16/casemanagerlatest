@@ -58,7 +58,6 @@ CaseManager.McpServer/
     {
       "caseId": 1,
       "caseName": "Customer Support Request",
-      "regardingUserId": 1,
       "isComplete": false,
       "canComplete": true,
       "assignedUserId": 2

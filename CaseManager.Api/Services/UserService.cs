@@ -25,6 +25,12 @@ public class UserService : IUserService
         return await _repository.GetByIdAsync(id);
     }
 
+    public async Task<User?> GetUserByUsernameAsync(string username)
+    {
+        var users = await _repository.GetAllAsync();
+        return users.FirstOrDefault(u => u.UserName.Equals(username, StringComparison.OrdinalIgnoreCase));
+    }
+
     public async Task<User> CreateUserAsync(User user)
     {
         return await _repository.AddAsync(user);
