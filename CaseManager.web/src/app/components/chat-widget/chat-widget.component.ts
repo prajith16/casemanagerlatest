@@ -201,6 +201,16 @@ import { CaseUpdateService } from '../../services/case-update.service';
             />
           </mat-form-field>
           <button
+            mat-icon-button
+            class="mic-button"
+            (click)="toggleRecording()"
+            [color]="isRecording ? 'warn' : 'primary'"
+            [matTooltip]="isRecording ? 'Stop recording' : 'Voice input'"
+            [disabled]="isLoading || !speechSupported"
+          >
+            <mat-icon>{{ isRecording ? 'mic' : 'mic_none' }}</mat-icon>
+          </button>
+          <button
             mat-fab
             color="primary"
             class="send-button"
@@ -233,7 +243,7 @@ import { CaseUpdateService } from '../../services/case-update.service';
         position: fixed;
         bottom: 20px;
         right: 20px;
-        width: 400px;
+        width: 650px;
         height: 700px;
         background: white;
         border-radius: 12px;
@@ -449,6 +459,32 @@ import { CaseUpdateService } from '../../services/case-update.service';
 
       .input-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
         display: none;
+      }
+
+      .mic-button {
+        flex-shrink: 0;
+      }
+
+      .mic-button mat-icon {
+        transition: transform 0.2s ease;
+      }
+
+      .mic-button:not([disabled]):hover mat-icon {
+        transform: scale(1.1);
+      }
+
+      .mic-button[color='warn'] mat-icon {
+        animation: pulse-mic 1s ease-in-out infinite;
+      }
+
+      @keyframes pulse-mic {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
       }
 
       .send-button {
@@ -832,6 +868,11 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   currentStreamingMessage = '';
   private subscriptions: Subscription[] = [];
 
+  // Voice input properties
+  isRecording = false;
+  recognition: any = null;
+  speechSupported = false;
+
   // MCP related properties
   mcpTools: McpTool[] = [];
   executingTool: string | null = null;
@@ -856,7 +897,70 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     private caseUpdateService: CaseUpdateService
   ) {}
 
+  initializeSpeechRecognition() {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      this.speechSupported = true;
+      this.recognition = new SpeechRecognition();
+      this.recognition.continuous = false;
+      this.recognition.interimResults = true;
+      this.recognition.lang = 'en-US';
+
+      this.recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map((result: any) => result.transcript)
+          .join('');
+        this.currentMessage = transcript;
+      };
+
+      this.recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        this.isRecording = false;
+        if (event.error === 'not-allowed') {
+          alert(
+            'Microphone access denied. Please allow microphone access in your browser settings.'
+          );
+        }
+      };
+
+      this.recognition.onend = () => {
+        this.isRecording = false;
+      };
+    } else {
+      this.speechSupported = false;
+      console.warn('Speech recognition not supported in this browser');
+    }
+  }
+
+  toggleRecording() {
+    if (!this.speechSupported) {
+      alert(
+        'Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.'
+      );
+      return;
+    }
+
+    if (this.isRecording) {
+      this.recognition.stop();
+      this.isRecording = false;
+    } else {
+      try {
+        this.recognition.start();
+        this.isRecording = true;
+      } catch (error) {
+        console.error('Failed to start speech recognition:', error);
+        this.isRecording = false;
+      }
+    }
+  }
+
   async ngOnInit() {
+    // Initialize speech recognition
+    this.initializeSpeechRecognition();
+
     // Get current user
     this.authService.currentUser$.subscribe((user) => {
       this.currentUser = user;
@@ -923,6 +1027,12 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.chatService.stopConnection();
+
+    // Clean up speech recognition
+    if (this.recognition) {
+      this.recognition.stop();
+      this.recognition = null;
+    }
   }
 
   toggleChat() {
