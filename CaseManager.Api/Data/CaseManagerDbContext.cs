@@ -28,6 +28,16 @@ public class CaseManagerDbContext : DbContext
     /// </summary>
     public DbSet<TaskAction> TaskActions { get; set; }
 
+    /// <summary>
+    /// MailContents DbSet
+    /// </summary>
+    public DbSet<MailContent> MailContents { get; set; }
+
+    /// <summary>
+    /// MailContentSents DbSet
+    /// </summary>
+    public DbSet<MailContentSent> MailContentSents { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

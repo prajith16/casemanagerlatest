@@ -20,7 +20,8 @@ public class McpServer
         _tools = new Dictionary<string, Func<JObject?, Task<object>>>
         {
             { "list_completable_cases", ListCompletableCasesAsync },
-            { "complete_task", CompleteTaskAsync }
+            { "complete_task", CompleteTaskAsync },
+            { "mail_content_response", MailContentResponseAsync }
         };
     }
 
@@ -129,6 +130,24 @@ public class McpServer
                                     },
                                     required = new[] { "userId" }
                                 }
+                            },
+                            new McpTool
+                            {
+                                Name = "mail_content_response",
+                                Description = "Generate an AI-powered formal response to a mail content using Case Manager documentation",
+                                InputSchema = new
+                                {
+                                    type = "object",
+                                    properties = new
+                                    {
+                                        contentId = new
+                                        {
+                                            type = "number",
+                                            description = "The ID of the mail content to respond to"
+                                        }
+                                    },
+                                    required = new[] { "contentId" }
+                                }
                             }
                         }
                     };
@@ -229,6 +248,34 @@ public class McpServer
             message = completedCount > 0 ? $"Completed {completedCount} task(s) successfully" : "No completable tasks found",
             completedCount,
             userId
+        };
+    }
+
+    private async Task<object> MailContentResponseAsync(JObject? args)
+    {
+        if (args == null)
+        {
+            throw new ArgumentException("Arguments required for mail_content_response");
+        }
+
+        var contentId = args["contentId"]?.ToObject<int>() ?? 0;
+
+        if (contentId <= 0)
+        {
+            throw new ArgumentException("Invalid contentId");
+        }
+
+        using var scope = _serviceProvider.CreateScope();
+        var mailContentService = scope.ServiceProvider.GetRequiredService<IMailContentService>();
+
+        var response = await mailContentService.GenerateMailResponseAsync(contentId);
+
+        return new
+        {
+            success = true,
+            message = "Mail response generated successfully",
+            contentId,
+            response
         };
     }
 }

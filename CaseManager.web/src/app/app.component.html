@@ -13,6 +13,14 @@
     <mat-icon>task</mat-icon>
     <span>Task Actions</span>
   </button>
+  <button mat-button routerLink="/messages">
+    <mat-icon>email</mat-icon>
+    <span>Messages</span>
+  </button>
+  <button mat-button routerLink="/message-responses">
+    <mat-icon>send</mat-icon>
+    <span>Responses</span>
+  </button>
   <span class="spacer"></span>
   <span class="user-info" *ngIf="currentUser$ | async as user">
     <mat-icon>account_circle</mat-icon>

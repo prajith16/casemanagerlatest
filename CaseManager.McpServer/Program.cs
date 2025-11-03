@@ -22,6 +22,7 @@ builder.Services.AddDbContext<CaseManagerDbContext>(options =>
 
 // Add services
 builder.Services.AddScoped<IMcpCaseService, McpCaseService>();
+builder.Services.AddScoped<IMailContentService, MailContentService>();
 builder.Services.AddSingleton<McpServer>();
 
 // Add the MCP background service

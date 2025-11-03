@@ -39,6 +39,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICaseService, CaseService>();
 builder.Services.AddScoped<ITaskActionService, TaskActionService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IMailContentService, MailContentService>();
+builder.Services.AddScoped<IMailContentSentService, MailContentSentService>();
 
 // Register CaseManagementPlugin as scoped (needs CaseService and UserService)
 builder.Services.AddScoped<CaseManagementPlugin>();
